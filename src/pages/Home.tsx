@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Typography, Button, Box, List, ListItem, ListItemText, ListItemSecondaryAction, IconButton, TextField, Container, Grid, Paper, Pagination } from '@mui/material';
+import { Typography, Button, Box, List, ListItem, ListItemText, ListItemSecondaryAction, IconButton, TextField, Container, Grid, Paper, Pagination, CircularProgress, Alert } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
-import { collection, getDocs, query, orderBy, limit, startAfter, getCountFromServer } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit, startAfter, doc, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import EditIcon from '@mui/icons-material/Edit';
-import BarChartIcon from '@mui/icons-material/BarChart';
 
 interface Survey {
   id: string;
   title: string;
   createdAt: Date;
+}
+
+interface Session {
+  surveyId: string;
+  status: 'waiting' | 'active' | 'completed';
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -21,47 +25,73 @@ const Home: React.FC = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [lastVisible, setLastVisible] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchSurveys = async () => {
-      const surveysCollection = collection(db, 'surveys');
-      let q = query(surveysCollection, orderBy('createdAt', 'desc'), limit(ITEMS_PER_PAGE));
-      if (page !== 1 && lastVisible) {
-        q = query(surveysCollection, orderBy('createdAt', 'desc'), startAfter(lastVisible), limit(ITEMS_PER_PAGE));
+      setLoading(true);
+      try {
+        const surveysCollection = collection(db, 'surveys');
+        let q = query(surveysCollection, orderBy('createdAt', 'desc'), limit(ITEMS_PER_PAGE));
+        if (page !== 1 && lastVisible) {
+          q = query(surveysCollection, orderBy('createdAt', 'desc'), startAfter(lastVisible), limit(ITEMS_PER_PAGE));
+        }
+
+        const surveySnapshot = await getDocs(q);
+        const surveyList = surveySnapshot.docs.map(doc => ({
+          id: doc.id,
+          title: doc.data().title,
+          createdAt: doc.data().createdAt.toDate(),
+        }));
+
+        setSurveys(surveyList);
+        setLastVisible(surveySnapshot.docs[surveySnapshot.docs.length - 1]);
+
+        const totalSurveysSnapshot = await getDocs(collection(db, 'surveys'));
+        setTotalPages(Math.ceil(totalSurveysSnapshot.size / ITEMS_PER_PAGE));
+      } catch (err) {
+        console.error('Error fetching surveys:', err);
+        setError('Failed to fetch surveys');
+      } finally {
+        setLoading(false);
       }
-
-      const surveySnapshot = await getDocs(q);
-      const surveyList = surveySnapshot.docs.map(doc => ({
-        id: doc.id,
-        title: doc.data().title,
-        createdAt: doc.data().createdAt.toDate(),
-      }));
-
-      setSurveys(surveyList);
-      setLastVisible(surveySnapshot.docs[surveySnapshot.docs.length - 1]);
-
-      // Get total count for pagination
-      const snapshot = await getCountFromServer(collection(db, 'surveys'));
-      const totalSurveys = snapshot.data().count;
-      setTotalPages(Math.ceil(totalSurveys / ITEMS_PER_PAGE));
     };
 
     fetchSurveys();
   }, [page]);
 
-  const handleJoin = () => {
-    if (sessionId.trim()) {
-      navigate(`/participate/${sessionId}`);
+  const handleJoin = async () => {
+    if (!sessionId.trim()) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const sessionDoc = await getDoc(doc(db, 'sessions', sessionId));
+      if (sessionDoc.exists()) {
+        const sessionData = sessionDoc.data() as Session;
+        if (sessionData.status === 'active') {
+          navigate(`/participate/${sessionId}`);
+        } else if (sessionData.status === 'waiting') {
+          setError('This session has not started yet. Please wait for the presenter to start the session.');
+        } else {
+          setError('This session has already ended.');
+        }
+      } else {
+        setError('Invalid session ID. Please check and try again.');
+      }
+    } catch (err) {
+      console.error('Error joining session:', err);
+      setError('Failed to join session. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
     setPage(value);
-  };
-
-  const handleResultsClick = (surveyId: string) => {
-    navigate(`/session-results/${surveyId}`);
   };
 
   return (
@@ -98,6 +128,7 @@ const Home: React.FC = () => {
               value={sessionId}
               onChange={(e) => setSessionId(e.target.value)}
               variant="outlined"
+              disabled={loading}
             />
           </Grid>
           <Grid item>
@@ -107,43 +138,48 @@ const Home: React.FC = () => {
               onClick={handleJoin}
               size="large"
               sx={{ py: 1, px: 3 }}
+              disabled={loading}
             >
               JOIN SESSION
             </Button>
           </Grid>
         </Grid>
+        {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
       </Paper>
 
       <Typography variant="h4" sx={{ mb: 3 }} align="center">
         Available Surveys
       </Typography>
-      <List sx={{ bgcolor: 'background.paper', mb: 3 }}>
-        {surveys.map((survey) => (
-          <ListItem key={survey.id} divider>
-            <ListItemText 
-              primary={survey.title} 
-              secondary={`Created: ${survey.createdAt.toLocaleDateString()}`}
+      {loading ? (
+        <CircularProgress />
+      ) : (
+        <>
+          <List sx={{ bgcolor: 'background.paper', mb: 3 }}>
+            {surveys.map((survey) => (
+              <ListItem key={survey.id} divider>
+                <ListItemText 
+                  primary={survey.title} 
+                  secondary={`Created: ${survey.createdAt.toLocaleDateString()}`}
+                />
+                <ListItemSecondaryAction>
+                  <IconButton edge="end" aria-label="edit" component={RouterLink} to={`/edit/${survey.id}`}>
+                    <EditIcon />
+                  </IconButton>
+                </ListItemSecondaryAction>
+              </ListItem>
+            ))}
+          </List>
+          <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+            <Pagination
+              count={totalPages}
+              page={page}
+              onChange={handlePageChange}
+              color="primary"
+              size="large"
             />
-            <ListItemSecondaryAction>
-              <IconButton edge="end" aria-label="edit" component={RouterLink} to={`/edit/${survey.id}`}>
-                <EditIcon />
-              </IconButton>
-              <IconButton edge="end" aria-label="results" onClick={() => handleResultsClick(survey.id)}>
-                <BarChartIcon />
-              </IconButton>
-            </ListItemSecondaryAction>
-          </ListItem>
-        ))}
-      </List>
-      <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-        <Pagination
-          count={totalPages}
-          page={page}
-          onChange={handlePageChange}
-          color="primary"
-          size="large"
-        />
-      </Box>
+          </Box>
+        </>
+      )}
     </Container>
   );
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Typography, Button, CircularProgress, Alert } from '@mui/material';
+import { Box, Typography, Button, CircularProgress, Alert, TextField, Snackbar } from '@mui/material';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 
@@ -28,6 +28,7 @@ const ManageSession: React.FC = () => {
   const [survey, setSurvey] = useState<Survey | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -108,6 +109,15 @@ const ManageSession: React.FC = () => {
     }
   };
 
+  const copyInviteLink = () => {
+    const inviteUrl = `${window.location.origin}/participate/${sessionId}`;
+    navigator.clipboard.writeText(inviteUrl).then(() => {
+      setSnackbarOpen(true);
+    }, (err) => {
+      console.error('Could not copy text: ', err);
+    });
+  };
+
   if (loading) return <CircularProgress />;
   if (error) return <Alert severity="error">{error}</Alert>;
   if (!session || !survey) return <Alert severity="warning">No data available</Alert>;
@@ -116,13 +126,32 @@ const ManageSession: React.FC = () => {
     ? survey.questions[session.currentQuestionIndex]
     : null;
 
+  const inviteUrl = `${window.location.origin}/participate/${sessionId}`;
+
   return (
     <Box sx={{ maxWidth: 600, margin: 'auto', padding: 2 }}>
       <Typography variant="h4" gutterBottom>{survey.title}</Typography>
       {session.status === 'waiting' ? (
-        <Button variant="contained" color="primary" onClick={startSession}>
-          Start Session
-        </Button>
+        <>
+          <Button variant="contained" color="primary" onClick={startSession} sx={{ mb: 2 }}>
+            Start Session
+          </Button>
+          <Box sx={{ mt: 2 }}>
+            <Typography variant="subtitle1" gutterBottom>Invite participants:</Typography>
+            <TextField
+              fullWidth
+              variant="outlined"
+              value={inviteUrl}
+              InputProps={{
+                readOnly: true,
+              }}
+              sx={{ mb: 1 }}
+            />
+            <Button variant="outlined" onClick={copyInviteLink}>
+              Copy Invite Link
+            </Button>
+          </Box>
+        </>
       ) : session.status === 'active' ? (
         <>
           <Typography variant="h5" gutterBottom>
@@ -153,6 +182,12 @@ const ManageSession: React.FC = () => {
       ) : (
         <Typography>Session completed</Typography>
       )}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        message="Invite link copied to clipboard"
+      />
     </Box>
   );
 };
