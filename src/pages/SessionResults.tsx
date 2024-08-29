@@ -45,12 +45,16 @@ const SessionResults: React.FC = () => {
           return;
         }
 
-        setSurvey(surveyDoc.data() as Survey);
+        const surveyData = surveyDoc.data() as Survey;
+        setSurvey(surveyData);
 
         const answersCollection = collection(db, 'sessions', sessionId, 'answers');
         const answersSnapshot = await getDocs(answersCollection);
         const answersData = answersSnapshot.docs.map(doc => doc.data() as Answer);
-        setAnswers(answersData);
+        
+        // Ensure answers array has the same length as questions array
+        const paddedAnswers = surveyData.questions.map((_, index) => answersData[index] || {});
+        setAnswers(paddedAnswers);
 
         setLoading(false);
       } catch (err) {
@@ -81,7 +85,7 @@ const SessionResults: React.FC = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {question.options.map((option) => {
+                {question.options && question.options.map((option) => {
                   const votes = questionAnswers[option] || 0;
                   const percentage = totalVotes > 0 ? (votes / totalVotes * 100).toFixed(2) : '0.00';
                   return (
@@ -103,8 +107,8 @@ const SessionResults: React.FC = () => {
         return (
           <Box>
             <Typography>Average: {average.toFixed(2)}</Typography>
-            <Typography>Min: {Math.min(...values)}</Typography>
-            <Typography>Max: {Math.max(...values)}</Typography>
+            <Typography>Min: {Math.min(...values, 0)}</Typography>
+            <Typography>Max: {Math.max(...values, 0)}</Typography>
             <Typography>Total Votes: {totalVotes}</Typography>
           </Box>
         );
@@ -130,7 +134,7 @@ const SessionResults: React.FC = () => {
           </TableContainer>
         );
       default:
-        return null;
+        return <Typography>Unsupported question type</Typography>;
     }
   };
 
