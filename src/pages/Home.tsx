@@ -118,7 +118,7 @@ const Home: React.FC = () => {
 
       <Paper elevation={3} sx={{ p: 4, mb: 6 }}>
         <Typography variant="h5" gutterBottom align="center" sx={{ mb: 3 }}>
-          Join Existing Session
+          セッションに参加
         </Typography>
         <Grid container spacing={2} alignItems="flex-end">
           <Grid item xs>
