@@ -33,7 +33,7 @@ const ManageSession: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       if (!sessionId) {
-        setError('No session ID provided');
+        setError('セッションIDを入力してください。');
         setLoading(false);
         return;
       }
@@ -48,14 +48,14 @@ const ManageSession: React.FC = () => {
           if (surveyDoc.exists()) {
             setSurvey(surveyDoc.data() as Survey);
           } else {
-            setError('Survey not found');
+            setError('アンケートが見つかりません。');
           }
         } else {
-          setError('Session not found');
+          setError('セッションが見つかりません。');
         }
       } catch (err) {
         console.error('Error fetching data:', err);
-        setError('Failed to fetch session data');
+        setError('セッションデータの同期に失敗しました。');
       }
 
       setLoading(false);
@@ -74,7 +74,7 @@ const ManageSession: React.FC = () => {
       setSession(prev => prev ? { ...prev, status: 'active', currentQuestionIndex: 0 } : null);
     } catch (err) {
       console.error('Error starting session:', err);
-      setError('Failed to start session');
+      setError('セッションの開始に失敗しました。');
     }
   };
 
@@ -97,7 +97,7 @@ const ManageSession: React.FC = () => {
       }
     } catch (err) {
       console.error('Error updating session:', err);
-      setError('Failed to update session');
+      setError('セッションの更新に失敗しました。');
     }
   };
 
@@ -137,7 +137,7 @@ const ManageSession: React.FC = () => {
             Start Session
           </Button>
           <Box sx={{ mt: 2 }}>
-            <Typography variant="subtitle1" gutterBottom>Invite participants:</Typography>
+            <Typography variant="subtitle1" gutterBottom>アンケート参加者を招待:</Typography>
             <TextField
               fullWidth
               variant="outlined"

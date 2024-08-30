@@ -52,7 +52,6 @@ const SessionResults: React.FC = () => {
         const answersSnapshot = await getDocs(answersCollection);
         const answersData = answersSnapshot.docs.map(doc => doc.data() as Answer);
         
-        // Ensure answers array has the same length as questions array
         const paddedAnswers = surveyData.questions.map((_, index) => answersData[index] || {});
         setAnswers(paddedAnswers);
 

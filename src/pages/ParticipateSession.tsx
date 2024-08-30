@@ -45,7 +45,7 @@ const ParticipateSession: React.FC = () => {
 
   useEffect(() => {
     if (!sessionId) {
-      setError('No session ID provided');
+      setError('セッションIDを入力してください。');
       setLoading(false);
       return;
     }
@@ -56,7 +56,7 @@ const ParticipateSession: React.FC = () => {
         const sessionData = docSnapshot.data() as Session;
         setSession(sessionData);
 
-        // セッションの状態に関わらず、サーベイデータを取得
+        // セッションの状態に関わらず、アンケートデータを取得
         const surveyDoc = await getDoc(doc(db, 'surveys', sessionData.surveyId));
         if (surveyDoc.exists()) {
           const surveyData = surveyDoc.data() as Survey;
@@ -73,7 +73,7 @@ const ParticipateSession: React.FC = () => {
       setLoading(false);
     }, (err) => {
       console.error('Error fetching session:', err);
-      setError('Failed to fetch session data');
+      setError('セッションデータの同期に失敗しました。');
       setLoading(false);
     });
 
@@ -216,7 +216,7 @@ const ParticipateSession: React.FC = () => {
       setAnswer('');
     } catch (err) {
       console.error('Error submitting answer:', err);
-      setError('Failed to submit answer');
+      setError('回答の送信を失敗しました。');
     }
   };
 

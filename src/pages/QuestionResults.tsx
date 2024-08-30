@@ -33,7 +33,7 @@ const QuestionResults: React.FC = () => {
       try {
         const sessionDoc = await getDoc(doc(db, 'sessions', sessionId));
         if (!sessionDoc.exists()) {
-          setError('Session not found');
+          setError('セッションが見つかりません。');
           setLoading(false);
           return;
         }
@@ -41,7 +41,7 @@ const QuestionResults: React.FC = () => {
         const surveyId = sessionDoc.data().surveyId;
         const surveyDoc = await getDoc(doc(db, 'surveys', surveyId));
         if (!surveyDoc.exists()) {
-          setError('Survey not found');
+          setError('アンケートが見つかりません。');
           setLoading(false);
           return;
         }
@@ -51,7 +51,7 @@ const QuestionResults: React.FC = () => {
 
         const questionData = surveyData.questions[parseInt(questionIndex)];
         if (!questionData) {
-          setError('Question not found');
+          setError('質問が見つかりません。');
           setLoading(false);
           return;
         }
@@ -67,7 +67,7 @@ const QuestionResults: React.FC = () => {
         setLoading(false);
       } catch (err) {
         console.error('Error fetching data:', err);
-        setError('Failed to fetch results');
+        setError('結果データの同期に失敗しました。');
         setLoading(false);
       }
     };

@@ -76,16 +76,16 @@ const Home: React.FC = () => {
         if (sessionData.status === 'active') {
           navigate(`/participate/${sessionId}`);
         } else if (sessionData.status === 'waiting') {
-          setError('This session has not started yet. Please wait for the presenter to start the session.');
+          setError('このセッションはまだ始まっていません。開始されるまでしばらくお待ち下さい。');
         } else {
-          setError('This session has already ended.');
+          setError('このセッションは終了しています。');
         }
       } else {
-        setError('Invalid session ID. Please check and try again.');
+        setError('このセッションIDは有効ではありません。');
       }
     } catch (err) {
       console.error('Error joining session:', err);
-      setError('Failed to join session. Please try again.');
+      setError('セッションへの参加に失敗しました。');
     } finally {
       setLoading(false);
     }
@@ -99,7 +99,7 @@ const Home: React.FC = () => {
     if (sessionId) {
       navigate(`/session-results/${sessionId}`);
     } else {
-      setError(`No active session found for survey ${surveyId}`);
+      setError(`${surveyId}の結果は見つかりません。`);
     }
   };
 

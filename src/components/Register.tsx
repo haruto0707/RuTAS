@@ -14,7 +14,7 @@ const Register: React.FC = () => {
     e.preventDefault();
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      navigate('/'); // Redirect to home page after successful registration
+      navigate('/'); // ホームへリダイレクト
     } catch (error) {
       setError('Failed to create an account. Please try again.');
       console.error(error);

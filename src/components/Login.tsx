@@ -14,7 +14,7 @@ const Login: React.FC = () => {
     e.preventDefault();
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate('/'); // Redirect to home page after successful login
+      navigate('/'); //ホームへリダイレクト
     } catch (error) {
       setError('Failed to log in. Please check your credentials.');
       console.error(error);
