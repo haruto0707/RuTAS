@@ -110,7 +110,7 @@ const ManageSession: React.FC = () => {
   };
 
   const copyInviteLink = () => {
-    const inviteUrl = `https://rutas-one.vercel.app//participate/${sessionId}`; //回答画面は別サーバーにて行う
+    const inviteUrl = `https://rutas-one.vercel.app/participate/${sessionId}`; //回答画面は別サーバーにて行う
     navigator.clipboard.writeText(inviteUrl).then(() => {
       setSnackbarOpen(true);
     }, (err) => {
@@ -126,7 +126,7 @@ const ManageSession: React.FC = () => {
     ? survey.questions[session.currentQuestionIndex]
     : null;
 
-  const inviteUrl = `${window.location.origin}/participate/${sessionId}`;
+  const inviteUrl = `https://rutas-one.vercel.app/participate/${sessionId}`;
 
   return (
     <Box sx={{ maxWidth: 600, margin: 'auto', padding: 2 }}>
