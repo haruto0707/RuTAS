@@ -110,7 +110,7 @@ const ManageSession: React.FC = () => {
   };
 
   const copyInviteLink = () => {
-    const inviteUrl = `https://rutas-one.vercel.app/participate/${sessionId}`; //回答画面は別サーバーにて行う
+    const inviteUrl = `${sessionId}`; //回答画面は別サーバーにて行う
     navigator.clipboard.writeText(inviteUrl).then(() => {
       setSnackbarOpen(true);
     }, (err) => {
@@ -126,7 +126,7 @@ const ManageSession: React.FC = () => {
     ? survey.questions[session.currentQuestionIndex]
     : null;
 
-  const inviteUrl = `https://rutas-one.vercel.app/participate/${sessionId}`;
+  const inviteUrl = `${sessionId}`;
 
   return (
     <Box sx={{ maxWidth: 600, margin: 'auto', padding: 2 }}>
@@ -148,7 +148,7 @@ const ManageSession: React.FC = () => {
               sx={{ mb: 1 }}
             />
             <Button variant="outlined" onClick={copyInviteLink}>
-              Copy Invite Link
+              Copy Session ID
             </Button>
           </Box>
         </>
@@ -186,7 +186,7 @@ const ManageSession: React.FC = () => {
         open={snackbarOpen}
         autoHideDuration={3000}
         onClose={() => setSnackbarOpen(false)}
-        message="Invite link copied to clipboard"
+        message="Session ID copied to clipboard"
       />
     </Box>
   );
