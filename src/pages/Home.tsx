@@ -5,16 +5,13 @@ import { Link as RouterLink } from 'react-router-dom';
 import { collection, getDocs, query, orderBy, limit, startAfter, doc, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import EditIcon from '@mui/icons-material/Edit';
+import BarChartIcon from '@mui/icons-material/BarChart';
 
 interface Survey {
   id: string;
   title: string;
   createdAt: Date;
-}
-
-interface Session {
-  surveyId: string;
-  status: 'waiting' | 'active' | 'completed';
+  sessionId?: string;
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -40,10 +37,14 @@ const Home: React.FC = () => {
         }
 
         const surveySnapshot = await getDocs(q);
-        const surveyList = surveySnapshot.docs.map(doc => ({
-          id: doc.id,
-          title: doc.data().title,
-          createdAt: doc.data().createdAt.toDate(),
+        const surveyList = await Promise.all(surveySnapshot.docs.map(async (doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            title: data.title,
+            createdAt: data.createdAt.toDate(),
+            sessionId: data.sessionId,
+          };
         }));
 
         setSurveys(surveyList);
@@ -71,7 +72,7 @@ const Home: React.FC = () => {
     try {
       const sessionDoc = await getDoc(doc(db, 'sessions', sessionId));
       if (sessionDoc.exists()) {
-        const sessionData = sessionDoc.data() as Session;
+        const sessionData = sessionDoc.data();
         if (sessionData.status === 'active') {
           navigate(`/participate/${sessionId}`);
         } else if (sessionData.status === 'waiting') {
@@ -92,6 +93,14 @@ const Home: React.FC = () => {
 
   const handlePageChange = (_event: React.ChangeEvent<unknown>, value: number) => {
     setPage(value);
+  };
+
+  const handleResultsClick = (surveyId: string, sessionId?: string) => {
+    if (sessionId) {
+      navigate(`/session-results/${sessionId}`);
+    } else {
+      setError(`No active session found for survey ${surveyId}`);
+    }
   };
 
   return (
@@ -118,7 +127,7 @@ const Home: React.FC = () => {
 
       <Paper elevation={3} sx={{ p: 4, mb: 6 }}>
         <Typography variant="h5" gutterBottom align="center" sx={{ mb: 3 }}>
-          セッションに参加
+          セッションへ参加
         </Typography>
         <Grid container spacing={2} alignItems="flex-end">
           <Grid item xs>
@@ -164,6 +173,9 @@ const Home: React.FC = () => {
                 <ListItemSecondaryAction>
                   <IconButton edge="end" aria-label="edit" component={RouterLink} to={`/edit/${survey.id}`}>
                     <EditIcon />
+                  </IconButton>
+                  <IconButton edge="end" aria-label="results" onClick={() => handleResultsClick(survey.id, survey.sessionId)}>
+                    <BarChartIcon />
                   </IconButton>
                 </ListItemSecondaryAction>
               </ListItem>

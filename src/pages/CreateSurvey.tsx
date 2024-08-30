@@ -99,14 +99,12 @@ const CreateSurvey: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // Create the survey document
       const surveyRef = await addDoc(collection(db, "surveys"), {
         title,
         questions,
         createdAt: new Date()
       });
       
-      // Create a session for this survey
       const sessionRef = await addDoc(collection(db, "sessions"), {
         surveyId: surveyRef.id,
         status: 'waiting',
@@ -114,12 +112,11 @@ const CreateSurvey: React.FC = () => {
         participants: 0
       });
 
-      // Update the survey with the sessionId
       await setDoc(doc(db, "surveys", surveyRef.id), { sessionId: sessionRef.id }, { merge: true });
       
       setSnackbarMessage('Survey created successfully!');
       setSnackbarOpen(true);
-      setTimeout(() => navigate(`/manage/${sessionRef.id}`), 2000); // Redirect to manage page after 2 seconds
+      setTimeout(() => navigate(`/manage/${sessionRef.id}`), 2000);
     } catch (error) {
       console.error("Error adding document: ", error);
       setSnackbarMessage('Error creating survey. Please try again.');
