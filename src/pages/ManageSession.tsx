@@ -110,7 +110,7 @@ const ManageSession: React.FC = () => {
   };
 
   const copyInviteLink = () => {
-    const inviteUrl = `${window.location.origin}/participate/${sessionId}`;
+    const inviteUrl = `https://rutas-one.vercel.app//participate/${sessionId}`; //回答画面は別サーバーにて行う
     navigator.clipboard.writeText(inviteUrl).then(() => {
       setSnackbarOpen(true);
     }, (err) => {
